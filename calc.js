@@ -60,6 +60,9 @@ const createCheckbox = (bonus) => {
 	checkbox.addEventListener("change", onBonusToggle);
 	const label = document.createElement("label");
 	label.textContent = bonus.name;
+	if(bonus.name === "Horde"){
+		label.textContent = "Map has flying enemies";	
+	}
 	label.htmlFor = bonus.name;
 	const container = document.createElement("div");
 	container.appendChild(label);
