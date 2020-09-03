@@ -61,7 +61,7 @@ const createCheckbox = (bonus) => {
 	const label = document.createElement("label");
 	label.textContent = bonus.name;
 	if(bonus.name === "Horde"){
-		label.textContent = "Map has flying enemies";	
+		label.textContent = "Map has flying enemies, or you have Mega Horde";	
 	}
 	label.htmlFor = bonus.name;
 	const container = document.createElement("div");
