@@ -3,9 +3,12 @@
 	list-style: none;
 }
 
+th.sortable::after {
+	content:"  ↕";
+}
 th.asc::after {
-	content:" ▲";
+	content:" ↑" !important;
 }
 th.des::after {
-	content:" ▼";
+	content:" ↓" !important;
 }
