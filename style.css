@@ -1,0 +1,11 @@
+#mapValueEvolutionsList {
+	column-count: 2;
+	list-style: none;
+}
+
+th.asc::after {
+	content:" ▲";
+}
+th.des::after {
+	content:" ▼";
+}

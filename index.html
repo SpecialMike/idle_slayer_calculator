@@ -3,9 +3,11 @@
 		<title>Idle Slayer Calculator</title>
 		<script src="./build/calc.js"></script>
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/dark.min.css">
+		<link rel="stylesheet" href="./style.css">
+		<meta charset="utf-8"/>
 	</head>
 	<body>
-		<h1>Random Box Bonus Odds</h1>
+		<h1 id="randomBoxCalc">Random Box Bonus Odds</h1>
 		<p>For details on the bonuses, visit <a href="https://idleslayer.fandom.com/wiki/Random_Box">the wiki</a></p>
 		<div id="randomBoxOptionsArea"></div>
 		<table>
@@ -16,6 +18,27 @@
 				</tr>
 			</thead>
 			<tbody id="randomBoxResultsTable">
+
+			</tbody>
+		</table>
+
+		<h1 id="mapValues">Map Values</h1>
+		<p>This table shows your the average coin/souls for each pattern for each map. This table can be used to compare maps, assuming that you are always slaying all enemies.</p>
+		<div id="mapValueOptionsArea">
+			<label for="maxPatternLevel">Enemy pattern level</label>
+			<input max="3" step="1" min="1" type="number" name="maxPatternLevel" />
+			<label for="mapValueEvolutionsList">Check unlocked evolutions:</label>
+			<ul id="mapValueEvolutionsList" name="mapValueEvolutionsList"></ul>
+		</div>
+		<table>
+			<thead>
+				<tr>
+					<th>Map</th>
+					<th class="sortable">Coins</th>
+					<th class="sortable">Souls</th>
+				</tr>
+			</thead>
+			<tbody id="mapValuesResultsTable">
 
 			</tbody>
 		</table>
