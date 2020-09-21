@@ -443,7 +443,7 @@ const on_bonus_toggle = (event: Event) => {
 };
 
 const sort_random_box_table = () => {
-	const table = document.getElementById("resultsTable") as HTMLTableElement;
+	const table = document.getElementById("randomBoxResultsTable") as HTMLTableElement;
 	if (table === null) {
 		return;
 	}
