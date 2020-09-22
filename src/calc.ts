@@ -58,6 +58,8 @@ let maps: Array<IdleSlayerMap> = [];
 const map_value_result_cells: Record<string, { coins: HTMLTableCellElement; souls: HTMLTableCellElement }> = {};
 let pattern_level_input: HTMLInputElement | null = null;
 const evolved: Record<string, boolean> = {};
+const MAX_PATTERN_LEVEL = 3;
+const MIN_PATTERN_LEVEL = 1;
 
 const setup_map_value_area = async (): Promise<void> => {
 	enemies = await load_json<Record<string, Enemy>>("enemies.json");
@@ -107,6 +109,18 @@ const setup_map_value_area = async (): Promise<void> => {
 	if (pattern_level_input !== null) {
 		pattern_level_input.value = String(1);
 		pattern_level_input.addEventListener("change", () => {
+			if (pattern_level_input !== null) {
+				const current_pattern_level_value = Number(pattern_level_input.value);
+				if (isNaN(current_pattern_level_value)) {
+					pattern_level_input.value = String(MIN_PATTERN_LEVEL);
+				}
+				if (current_pattern_level_value > MAX_PATTERN_LEVEL) {
+					pattern_level_input.value = String(MAX_PATTERN_LEVEL);
+				}
+				else if (current_pattern_level_value < MIN_PATTERN_LEVEL) {
+					pattern_level_input.value = String(MIN_PATTERN_LEVEL);
+				}
+			}
 			calculate_map_values();
 		});
 	}
