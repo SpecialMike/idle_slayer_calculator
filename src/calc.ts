@@ -141,9 +141,19 @@ const calculate_map_values = () => {
 			}
 			for (const enemy_name of pattern.enemies) {
 				let enemy_data = enemies[enemy_name];
+				if (enemy_data === undefined) {
+					console.log(`No enemy data found for ${enemy_name}, skipping enemy in pattern in ${map.name}`);
+					continue;
+				}
 				//find the highest unlocked evolution for this enemy
 				while (enemy_data.evolution !== undefined && evolved[enemy_data.evolution]) {
-					enemy_data = enemies[enemy_data.evolution];
+					if (enemies[enemy_data.evolution] === undefined) {
+						console.log(`Enemy evolution ${enemy_data.evolution} not found, staying with ${JSON.stringify(enemy_data)}`);
+						break;
+					}
+					else {
+						enemy_data = enemies[enemy_data.evolution];
+					}
 				}
 				souls += enemy_data.souls;
 				coins += enemy_data.coins;
@@ -175,6 +185,9 @@ const create_evolution_checkbox = (name: string) => {
 
 const find_evolution_base = (enemy_name: string): Enemy => {
 	const enemy = enemies[enemy_name.replace(/_/g, " ")];
+	if (enemy === undefined) {
+		throw new Error(`Enemy ${enemy_name} is undefined! Cannot find base for this.`);
+	}
 	if (enemy.base) {
 		return enemy;
 	}
