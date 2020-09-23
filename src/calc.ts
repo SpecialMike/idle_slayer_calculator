@@ -55,7 +55,8 @@ interface IdleSlayerMap {
 const base_enemies: Array<Enemy> = [];
 let enemies: Record<string, Enemy> = {};
 let maps: Array<IdleSlayerMap> = [];
-const map_value_result_cells: Record<string, { coins: HTMLTableCellElement; souls: HTMLTableCellElement }> = {};
+const map_active_value_result_cells: Record<string, { coins: HTMLTableCellElement; souls: HTMLTableCellElement }> = {};
+const map_idle_value_result_cells: Record<string, { coins: HTMLTableCellElement; souls: HTMLTableCellElement }> = {};
 let pattern_level_input: HTMLInputElement | null = null;
 const evolved: Record<string, boolean> = {};
 const MAX_PATTERN_LEVEL = 3;
@@ -73,8 +74,9 @@ const setup_map_value_area = async (): Promise<void> => {
 	delete enemies["Soul Goblin Chief"];
 	const options_area = document.getElementById("mapValueOptionsArea");
 	const evolutions_list = document.getElementById("mapValueEvolutionsList");
-	const results_table = document.getElementById("mapValuesResultsTable");
-	if (options_area === null || evolutions_list === null || results_table === null) {
+	const active_results_table = document.getElementById("mapValuesResultsTableActive");
+	const idle_results_table = document.getElementById("mapValuesResultsTableIdle");
+	if (options_area === null || evolutions_list === null || active_results_table === null || idle_results_table === null) {
 		return;
 	}
 	for (const [name, enemy] of Object.entries(enemies)) {
@@ -92,17 +94,26 @@ const setup_map_value_area = async (): Promise<void> => {
 		}
 		evolved[name] = false;
 	}
-	for (const map of maps) {
+	const create_map_row = (table: HTMLElement, map: IdleSlayerMap, type: "active" | "idle") => {
 		const coins = document.createElement("td");
 		const souls = document.createElement("td");
-		map_value_result_cells[map.name] = { coins, souls };
-		const bonus_row = document.createElement("tr");
-		const name_cell = document.createElement("td");
-		name_cell.textContent = map.name;
-		bonus_row.appendChild(name_cell);
-		bonus_row.appendChild(coins);
-		bonus_row.appendChild(souls);
-		results_table.appendChild(bonus_row);
+		if (type === "active") {
+			map_active_value_result_cells[map.name] = { coins, souls };
+		}
+		else if (type === "idle") {
+			map_idle_value_result_cells[map.name] = { coins, souls };
+		}
+		const map_row = document.createElement("tr");
+		const map_name_cell = document.createElement("td");
+		map_name_cell.textContent = map.name;
+		map_row.appendChild(map_name_cell);
+		map_row.appendChild(coins);
+		map_row.appendChild(souls);
+		table.appendChild(map_row);
+	};
+	for (const map of maps) {
+		create_map_row(active_results_table, map, "active");
+		create_map_row(idle_results_table, map, "idle");
 	}
 
 	pattern_level_input = document.querySelector("input[name=maxPatternLevel]");
@@ -128,6 +139,11 @@ const setup_map_value_area = async (): Promise<void> => {
 };
 
 const calculate_map_values = () => {
+	calculate_map_values_active();
+	calculate_map_values_idle();
+};
+
+const calculate_map_values_active = () => {
 	if (pattern_level_input === null) {
 		return;
 	}
@@ -159,12 +175,48 @@ const calculate_map_values = () => {
 				coins += enemy_data.coins;
 			}
 		}
-		map_value_result_cells[map.name].coins.innerText = String((coins / map.patterns.length).toFixed(2));
-		map_value_result_cells[map.name].souls.innerText = String((souls / map.patterns.length).toFixed(2));
+		map_active_value_result_cells[map.name].coins.innerText = String((coins / map.patterns.length).toFixed(2));
+		map_active_value_result_cells[map.name].souls.innerText = String((souls / map.patterns.length).toFixed(2));
 	}
-	const table = document.querySelector("#mapValuesResultsTable")?.closest("table");
+	const table = document.querySelector("#mapValuesResultsTableActive")?.closest("table");
 	if (table !== null && table !== undefined) {
 		update_table_sort(table);
+	}
+};
+
+const calculate_map_values_idle = () => {
+	//pattern level doesn't matter, it's all about what enemies are capable of spawning in a map
+
+	for (const map of maps) {
+		const map_enemies = new Set<string>();
+		let coins = 0;
+		let souls = 0;
+		for (const pattern of map.patterns) {
+			for (const enemy_name of pattern.enemies) {
+				map_enemies.add(enemy_name);
+			}
+		}
+		for (const enemy_name of Array.from(map_enemies)) {
+			let enemy_data = enemies[enemy_name];
+			if (enemy_data === undefined) {
+				console.log(`No enemy data found for ${enemy_name}, skipping enemy in pattern in ${map.name}`);
+				continue;
+			}
+			//find the highest unlocked evolution for this enemy
+			while (enemy_data.evolution !== undefined && evolved[enemy_data.evolution]) {
+				if (enemies[enemy_data.evolution] === undefined) {
+					console.log(`Enemy evolution ${enemy_data.evolution} not found, staying with ${JSON.stringify(enemy_data)}`);
+					break;
+				}
+				else {
+					enemy_data = enemies[enemy_data.evolution];
+				}
+			}
+			coins += enemy_data.coins;
+			souls += enemy_data.souls;
+		}
+		map_idle_value_result_cells[map.name].coins.innerText = String((coins / map_enemies.size).toFixed(2));
+		map_idle_value_result_cells[map.name].souls.innerText = String((souls / map_enemies.size).toFixed(2));
 	}
 };
 
