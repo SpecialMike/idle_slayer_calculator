@@ -218,6 +218,10 @@ const calculate_map_values_idle = () => {
 		map_idle_value_result_cells[map.name].coins.innerText = String((coins / map_enemies.size).toFixed(2));
 		map_idle_value_result_cells[map.name].souls.innerText = String((souls / map_enemies.size).toFixed(2));
 	}
+	const table = document.querySelector("#mapValuesResultsTableIdle")?.closest("table");
+	if (table !== null && table !== undefined) {
+		update_table_sort(table);
+	}
 };
 
 const create_evolution_checkbox = (name: string) => {
