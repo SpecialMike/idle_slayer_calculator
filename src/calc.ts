@@ -429,7 +429,7 @@ const setup_random_box_simulation = () => {
 	});
 	divinity_checkbox.name = "divinity_checkbox";
 	const label = document.createElement("label");
-	label.textContent = "Divinity Bought";
+	label.textContent = "Less Coins More Fun Divinity Bought";
 	label.htmlFor = "divinity_checkbox";
 	const container = document.createElement("div");
 	container.appendChild(label);
