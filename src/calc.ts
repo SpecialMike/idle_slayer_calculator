@@ -419,6 +419,22 @@ const setup_random_box_simulation = () => {
 		bonus_row.appendChild(result_cell);
 		results_table.appendChild(bonus_row);
 	}
+
+	const divinity_checkbox = document.createElement("input");
+	divinity_checkbox.type = "checkbox";
+	divinity_checkbox.checked = random_box_reduce_found_coins;
+	divinity_checkbox.addEventListener("change", () => {
+		random_box_reduce_found_coins = divinity_checkbox.checked;
+		run_simulation();
+	});
+	divinity_checkbox.name = "divinity_checkbox";
+	const label = document.createElement("label");
+	label.textContent = "Divinity Bought";
+	label.htmlFor = "divinity_checkbox";
+	const container = document.createElement("div");
+	container.appendChild(label);
+	container.appendChild(divinity_checkbox);
+	options_area.appendChild(container);
 	run_simulation();
 };
 
@@ -475,6 +491,7 @@ const random_box_bonuses = [
 		toggleable: true,
 	},
 ];
+let random_box_reduce_found_coins = false;
 
 interface Bonus {
 	chance: number;
@@ -592,12 +609,13 @@ const select_random_bonus = () => {
 		shuffle_array(random_box_bonuses);
 		for (const random_bonus of random_box_bonuses) {
 			const chance = Math.random();
-			if (chance <= random_bonus.chance) {
+			const random_bonus_chance =
+				random_bonus.name === "Found Coins" && random_box_reduce_found_coins ? random_bonus.chance - 0.1 : random_bonus.chance;
+			if (chance <= random_bonus_chance) {
 				evt = random_bonus;
 			}
 		}
-	} while (evt !== null && toggled[evt.name] !== undefined && !toggled[evt.name]);
-	//disabled warning because we don't break from the loop until it is not null... we could have an infinite loop here technically :shrug:
-	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-	return evt!;
+	} while (evt === null || (toggled[evt.name] !== undefined && !toggled[evt.name]));
+	//we could have an infinite loop here technically :shrug:
+	return evt;
 };
