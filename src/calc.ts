@@ -425,7 +425,7 @@ const setup_random_box_simulation = () => {
 	divinity_checkbox.checked = random_box_reduce_found_coins;
 	divinity_checkbox.addEventListener("change", () => {
 		random_box_reduce_found_coins = divinity_checkbox.checked;
-		run_simulation();
+		get_box_probabilities();
 	});
 	divinity_checkbox.name = "divinity_checkbox";
 	const label = document.createElement("label");
@@ -435,7 +435,7 @@ const setup_random_box_simulation = () => {
 	container.appendChild(label);
 	container.appendChild(divinity_checkbox);
 	options_area.appendChild(container);
-	run_simulation();
+	get_box_probabilities();
 };
 
 //todo: load random_box_bonuses from a json file
@@ -539,7 +539,7 @@ const on_bonus_toggle = (event: Event) => {
 	else {
 		toggled[bonus_name] = !toggled[bonus_name];
 	}
-	run_simulation();
+	get_box_probabilities();
 };
 
 const sort_random_box_table = () => {
@@ -561,61 +561,107 @@ const sort_random_box_table = () => {
 		table.appendChild(row);
 	}
 };
+
 /**
- * Run the simulation. Chooses a random bonus `num_rounds` times and then puts the results in the table
+ * Credit to Scion#7777 from the IdleSlayer discord for this
  */
-const run_simulation = () => {
-	const num_success: Record<string, number> = {};
-	for (const random_bonus of random_box_bonuses) {
-		num_success[random_bonus.name] = 0;
-	}
-	const num_rounds = 100000;
-	for (let run = 0; run < num_rounds; run++) {
-		num_success[select_random_bonus().name]++;
-	}
-	for (const key of Object.keys(num_success)) {
-		random_box_result_cells[key].textContent = `${((num_success[key] / num_rounds) * 100).toFixed(2)}%`;
-	}
-	sort_random_box_table();
-};
-/**
- * Shuffle the array in place, to pick from later
- * @param {Array<T>} array Array to shuffle
- */
-const shuffle_array = <T>(array: Array<T>) => {
-	let current_index = array.length,
-		temp_value,
-		random_index;
-	// While there remain elements to shuffle...
-	while (0 !== current_index) {
-		// Pick a remaining element...
-		random_index = Math.floor(Math.random() * current_index);
-		current_index -= 1;
-		// And swap it with the current element.
-		temp_value = array[current_index];
-		array[current_index] = array[random_index];
-		array[random_index] = temp_value;
-	}
-	return array;
-};
-/**
- * Selects a random bonus according to the algorithm described by plab
- * Shuffles the array, and then goes down the list, attempting to choose each event
- * An event passes if it is toggled and if its chances pass
- */
-const select_random_bonus = () => {
-	let evt = null;
-	do {
-		shuffle_array(random_box_bonuses);
-		for (const random_bonus of random_box_bonuses) {
-			const chance = Math.random();
-			const random_bonus_chance =
-				random_bonus.name === "Found Coins" && random_box_reduce_found_coins ? random_bonus.chance - 0.1 : random_bonus.chance;
-			if (chance <= random_bonus_chance) {
-				evt = random_bonus;
-			}
+class Distribution {
+	dist: Record<string, number>;
+	empty: number;
+	constructor() {
+		this.dist = {};
+		this.empty = 1;
+		for (const box of random_box_bonuses) {
+			this.dist[box.name] = 0;
 		}
-	} while (evt === null || (toggled[evt.name] !== undefined && !toggled[evt.name]));
-	//we could have an infinite loop here technically :shrug:
-	return evt;
+		this.update();
+	}
+
+	update() {
+		this.empty = 1;
+		for (const box of random_box_bonuses) {
+			this.empty -= this.dist[box.name];
+		}
+	}
+
+	add(other: Distribution) {
+		for (const box of random_box_bonuses) {
+			this.dist[box.name] += other.dist[box.name];
+		}
+	}
+
+	divide(scalar: number) {
+		for (const box of random_box_bonuses) {
+			this.dist[box.name] /= scalar;
+		}
+	}
+
+	normalize() {
+		this.divide(1 - this.empty);
+	}
+}
+
+let distribution_cache: Record<string, Distribution> = {};
+
+/**
+ * Calculate the distribution of bonuses from the random box.
+ *
+ * Credit to Scion#7777 from the IdleSlayer discord for this
+ */
+const calculate_distribution = (box_set: Array<Bonus>): Distribution => {
+	const set_names = box_set.map((box) => box.name).join("");
+	if (distribution_cache[set_names] != undefined) {
+		return distribution_cache[set_names];
+	}
+
+	const new_dist = new Distribution();
+	// 1. If set has only 1 element, calculate it.
+	if (box_set.length === 1) {
+		for (const out of box_set) {
+			new_dist.dist[out.name] = out.chance;
+			new_dist.update();
+		}
+		distribution_cache[set_names] = new_dist;
+		return new_dist;
+	}
+	// 2. Otherwise, calculate it in function of the subsets
+	//
+	// Idea: take each element, pretend it's the last one in the shuffle.
+	// The resulting distribution is the same as that of the reduced set, except
+	// probability of the last element is its base probability * reduced.empty.
+	//
+	// Calculating the average after making each element of the set be the last
+	// gives the final distribution.
+	for (const [last_idx, last] of box_set.entries()) {
+		const reduced_set = [...box_set];
+		reduced_set.splice(last_idx, 1);
+		const reduced = calculate_distribution(reduced_set);
+		new_dist.add(reduced);
+		new_dist.dist[last.name] += last.chance * reduced.empty;
+	}
+	new_dist.divide(box_set.length);
+	new_dist.update();
+	distribution_cache[set_names] = new_dist;
+	return new_dist;
+};
+/**
+ * Get the probabilities of getting random boxes, and update the table with the probabilities.
+ */
+const get_box_probabilities = () => {
+	const filtered_boxes = random_box_bonuses.filter((bonus) => toggled[bonus.name] === undefined || toggled[bonus.name]);
+	const idx = filtered_boxes.findIndex((box) => box.name === "Found Coins");
+	if (random_box_reduce_found_coins) {
+		filtered_boxes[idx].chance = 0.9;
+	}
+	else {
+		filtered_boxes[idx].chance = 1;
+	}
+	const distribution = calculate_distribution(filtered_boxes);
+	distribution.normalize();
+	for (const [key, probability] of Object.entries(distribution.dist)) {
+		random_box_result_cells[key].textContent = `${(probability * 100).toFixed(2)}%`;
+	}
+	//clear cache
+	distribution_cache = {};
+	sort_random_box_table();
 };
