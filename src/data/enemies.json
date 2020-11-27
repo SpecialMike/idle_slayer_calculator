@@ -32,6 +32,11 @@
         "coins": 12,
         "base": false
     },
+    "Blue Wildfire": {
+        "souls": 16,
+        "coins": 2,
+        "base": false
+    },
     "Bumblebee": {
         "souls": 3,
         "coins": 4,
@@ -45,13 +50,13 @@
         "base": true
     },
     "Cursed Oak Tree": {
-        "souls": 6,
-        "coins": 2,
+        "souls": 11,
+        "coins": 4,
         "base": true
     },
     "Cursed Tree": {
-        "souls": 11,
-        "coins": 4,
+        "souls": 6,
+        "coins": 2,
         "evolution": "Cursed Oak Tree",
         "base": true
     },
