@@ -86,7 +86,6 @@
     "Poison Mushroom": {
         "souls": 2,
         "coins": 10,
-        "evolution": "Venus Carniplant",
         "base": false
     },
     "Red Jelly": {
