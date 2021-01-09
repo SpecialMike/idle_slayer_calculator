@@ -3,6 +3,16 @@
 	list-style: none;
 }
 
+#mapValueGiantsList {
+	column-count: 2;
+	list-style: none;
+}
+
+#mapValueSpawnRateList {
+	column-count: 2;
+	list-style: none;
+}
+
 th.sortable::after {
 	content:"  ↕";
 }

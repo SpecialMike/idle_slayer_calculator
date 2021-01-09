@@ -1,61 +1,102 @@
 <html>
-	<head>
-		<title>Idle Slayer Calculator</title>
-		<script src="./build/calc.js"></script>
-		<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/dark.min.css">
-		<link rel="stylesheet" href="./style.css">
-		<meta charset="utf-8"/>
-	</head>
-	<body>
-		<h1 id="randomBoxCalc">Random Box Bonus Odds</h1>
-		<p>For details on the bonuses, visit <a href="https://idleslayer.fandom.com/wiki/Random_Box">the wiki</a></p>
-		<div id="randomBoxOptionsArea"></div>
-		<table>
-			<thead>
-				<tr>
-					<th>Name</th>
-					<th>Chance</th>
-				</tr>
-			</thead>
-			<tbody id="randomBoxResultsTable">
 
-			</tbody>
-		</table>
-		<hr/>
-		<h1 id="mapValues">Map Values</h1>
-		<div id="mapValueOptionsArea">
-			<label for="maxPatternLevel">Enemy pattern level (Increased by one for each upgrade: Start Adventure, Enemy Realm, More Than Ever)</label>
-			<input max="3" step="1" min="1" type="number" name="maxPatternLevel" />
-			<label for="mapValueEvolutionsList">Check unlocked evolutions:</label>
-			<ul id="mapValueEvolutionsList" name="mapValueEvolutionsList"></ul>
-		</div>
-		<h2>Active Play</h2>
-		<p>This table shows you the average coin/souls for each pattern for each map. This table can be used to compare maps, assuming that you are always slaying all enemies.</p>
-		<table>
-			<thead>
-				<tr>
-					<th>Map</th>
-					<th class="sortable">Coins</th>
-					<th class="sortable">Souls</th>
-				</tr>
-			</thead>
-			<tbody id="mapValuesResultsTableActive">
+<head>
+	<title>Idle Slayer Calculator</title>
+	<script src="./build/calc.js"></script>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/dark.min.css">
+	<link rel="stylesheet" href="./style.css">
+	<meta charset="utf-8" />
+</head>
 
-			</tbody>
-		</table>
-		<h2>Idle Play</h2>
-		<p>This table shows the average coins and souls per slay in a map. Divide this by your seconds per offline slay to get your coins/souls per second while offline.</p>
-		<table>
-			<thead>
-				<tr>
-					<th>Map</th>
-					<th class="sortable">Coins</th>
-					<th class="sortable">Souls</th>
-				</tr>
-			</thead>
-			<tbody id="mapValuesResultsTableIdle">
+<body>
+	<h1 id="randomBoxCalc">Random Box Bonus Odds</h1>
+	<p>For details on the bonuses, visit <a href="https://idleslayer.fandom.com/wiki/Random_Box">the wiki</a></p>
+	<div id="randomBoxOptionsArea"></div>
+	<table>
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>Chance</th>
+			</tr>
+		</thead>
+		<tbody id="randomBoxResultsTable">
 
-			</tbody>
-		</table>
-	</body>
+		</tbody>
+	</table>
+	<hr />
+	<h1 id="mapValues">Map Values</h1>
+	<div id="mapValueOptionsArea">
+		<span>Upgrades bought affecting spawn rates:</span>
+		<ul id="mapValueSpawnRateList">
+			<li>
+				<label for="needForKill">Need For Kill</label>
+				<input type="checkbox" name="needForKill" />
+			</li>
+			<li>
+				<label for="enemyInvasion">Enemy Invasion</label>
+				<input type="checkbox" name="enemyInvasion" />
+			</li>
+			<li>
+				<label for="multaHostibus">Multa Hostibus</label>
+				<input type="checkbox" name="multaHostibus" />
+			</li>
+			<li>
+				<label for="boneRibWhistle">Bone Rib Whistle</label>
+				<input type="checkbox" name="boneRibWhistle" />
+			</li>
+			<li>
+				<label for="bringHell">Bring Hell (Ascension)</label>
+				<input type="checkbox" name="bringHell" />
+			</li>
+			<li>
+				<label for="doomed">Doomed (Ascension)</label>
+				<input type="checkbox" name="doomed" />
+			</li>
+			<li>
+				<label for="bigTroubles">Big Troubles (Divinity)</label>
+				<input type="checkbox" name="bigTroubles" />
+			</li>
+		</ul>
+		<br />
+		<label for="maxPatternLevel">Enemy pattern level (Increased by one for each upgrade: Start Adventure, Enemy
+			Realm, More Than Ever)</label>
+		<input max="3" step="1" min="1" type="number" name="maxPatternLevel" />
+		<label for="mapValueEvolutionsList">Check unlocked evolutions:</label>
+		<ul id="mapValueEvolutionsList" name="mapValueEvolutionsList"></ul>
+		<label for="mapValueGiantsList">Check unlocked giants:</label>
+		<ul id="mapValueGiantsList" name="mapValueGiantsList"></ul>
+	</div>
+	<h2>Active Play</h2>
+	<p>This table shows you the base coin/souls per second for each map. This assumes that you are not boosting, and
+		that you are slaying all enemies. It also does not take into consideration any boosts to your soul or coin
+		collection. This can be used to compare the performance of each map with each other.</p>
+	<table>
+		<thead>
+			<tr>
+				<th>Map</th>
+				<th class="sortable">Coins</th>
+				<th class="sortable">Souls</th>
+			</tr>
+		</thead>
+		<tbody id="mapValuesResultsTableActive">
+
+		</tbody>
+	</table>
+	<h2>Idle Play</h2>
+	<p>This table shows the average coins and souls per slay in a map. Divide this by your seconds per offline slay to
+		get your coins/souls per second while offline.</p>
+	<table>
+		<thead>
+			<tr>
+				<th>Map</th>
+				<th class="sortable">Coins</th>
+				<th class="sortable">Souls</th>
+			</tr>
+		</thead>
+		<tbody id="mapValuesResultsTableIdle">
+
+		</tbody>
+	</table>
+</body>
+
 </html>

@@ -1,0 +1,26 @@
+[
+    {
+        "name": "Hills' Golem",
+        "maps": ["Hills"],
+        "coins": 40,
+        "souls": 60
+    },
+    {
+        "name": "Adult Yeti",
+        "maps": ["Frozen Fields"],
+        "coins": 50,
+        "souls": 74
+    },
+    {
+        "name": "Fairy Queen",
+        "maps": ["Mystic Valley"],
+        "coins": 75,
+        "souls": 150
+    },
+    {
+        "name": "Archdemon",
+        "maps": ["Haunted Castle"],
+        "coins": 100,
+        "souls": 275
+    }
+]

@@ -52,19 +52,37 @@ interface IdleSlayerMap {
 	patterns: Array<Pattern>;
 }
 
+interface Giant {
+	name: string;
+	maps: Array<string>;
+	coins: number;
+	souls: number;
+}
+
 const base_enemies: Array<Enemy> = [];
 let enemies: Record<string, Enemy> = {};
 let maps: Array<IdleSlayerMap> = [];
+let giants: Array<Giant> = [];
 const map_active_value_result_cells: Record<string, { coins: HTMLTableCellElement; souls: HTMLTableCellElement }> = {};
 const map_idle_value_result_cells: Record<string, { coins: HTMLTableCellElement; souls: HTMLTableCellElement }> = {};
 let pattern_level_input: HTMLInputElement | null = null;
+let need_for_kill_input: HTMLInputElement | null = null;
+let enemy_invasion_input: HTMLInputElement | null = null;
+let multa_hostibus_input: HTMLInputElement | null = null;
+let bone_rib_whistle_input: HTMLInputElement | null = null;
+let bring_hell_input: HTMLInputElement | null = null;
+let doomed_input: HTMLInputElement | null = null;
+let big_troubles_input: HTMLInputElement | null = null;
+
 const evolved: Record<string, boolean> = {};
+const giant_bought: Record<string, boolean> = {};
 const MAX_PATTERN_LEVEL = 3;
 const MIN_PATTERN_LEVEL = 1;
 
 const setup_map_value_area = async (): Promise<void> => {
 	enemies = await load_json<Record<string, Enemy>>("enemies.json");
 	maps = await load_json<Array<IdleSlayerMap>>("maps.json");
+	giants = await load_json<Array<Giant>>("giants.json");
 	const bonus_index = maps.findIndex((m) => m.name === "Bonus Stage");
 	if (bonus_index !== -1) {
 		maps.splice(bonus_index, 1);
@@ -74,9 +92,10 @@ const setup_map_value_area = async (): Promise<void> => {
 	delete enemies["Soul Goblin Chief"];
 	const options_area = document.getElementById("mapValueOptionsArea");
 	const evolutions_list = document.getElementById("mapValueEvolutionsList");
+	const giants_list = document.getElementById("mapValueGiantsList");
 	const active_results_table = document.getElementById("mapValuesResultsTableActive");
 	const idle_results_table = document.getElementById("mapValuesResultsTableIdle");
-	if (options_area === null || evolutions_list === null || active_results_table === null || idle_results_table === null) {
+	if (options_area === null || evolutions_list === null || active_results_table === null || idle_results_table === null || giants_list === null) {
 		return;
 	}
 	for (const [name, enemy] of Object.entries(enemies)) {
@@ -88,11 +107,15 @@ const setup_map_value_area = async (): Promise<void> => {
 				}
 				const evolved_name = evolved_enemy.evolution;
 				evolved_enemy = enemies[evolved_enemy.evolution];
-				evolutions_list.appendChild(create_evolution_checkbox(evolved_name));
+				evolutions_list.appendChild(create_evolution_checkbox(evolved_name, on_evolution_toggle));
 			} while (evolved_enemy !== undefined);
 			base_enemies.push(enemy);
 		}
 		evolved[name] = false;
+	}
+	for (const giant of giants) {
+		giants_list.appendChild(create_evolution_checkbox(giant.name, on_giant_toggle));
+		giant_bought[giant.name] = false;
 	}
 	const create_map_row = (table: HTMLElement, map: IdleSlayerMap, type: "active" | "idle") => {
 		const coins = document.createElement("td");
@@ -135,6 +158,15 @@ const setup_map_value_area = async (): Promise<void> => {
 			calculate_map_values();
 		});
 	}
+
+	need_for_kill_input = document.querySelector("input[name=needForKill]");
+	enemy_invasion_input = document.querySelector("input[name=enemyInvasion]");
+	multa_hostibus_input = document.querySelector("input[name=multaHostibus]");
+	bone_rib_whistle_input = document.querySelector("input[name=boneRibWhistle]");
+	bring_hell_input = document.querySelector("input[name=bringHell]");
+	doomed_input = document.querySelector("input[name=doomed]");
+	big_troubles_input = document.querySelector("input[name=bigTroubles]");
+
 	calculate_map_values();
 };
 
@@ -148,6 +180,25 @@ const calculate_map_values_active = () => {
 		return;
 	}
 	const pattern_level = Number(pattern_level_input.value);
+	const giants_chance_modifier = big_troubles_input?.checked ? 15 : 0;
+	const enemy_spawn_chance_bonus =
+		(need_for_kill_input?.checked ? 30 : 0) +
+		(enemy_invasion_input?.checked ? 50 : 0) +
+		(multa_hostibus_input?.checked ? 50 : 0) +
+		(bone_rib_whistle_input?.checked ? 40 : 0) +
+		(bring_hell_input?.checked ? 20 : 0) +
+		(doomed_input?.checked ? 30 : 0);
+
+	//assuming no boosting for now. It will just scale everything linearly anyway.
+	const player_speed = 4; //distance units/second
+
+	//distance units per giant
+	const average_giant_distance = (250 / (giants_chance_modifier / 100 + 1) + 450 / (giants_chance_modifier / 100 + 1)) / 2; //in distance units
+	const giants_per_second = player_speed / average_giant_distance;
+	//distance units per pattern
+	const average_pattern_distance = (60 / (enemy_spawn_chance_bonus / 100 + 1) + 90 / (enemy_spawn_chance_bonus / 100 + 1)) / 2; //in distance units
+	const patterns_per_second = player_speed / average_pattern_distance;
+
 	for (const map of maps) {
 		let souls = 0;
 		let coins = 0;
@@ -175,9 +226,26 @@ const calculate_map_values_active = () => {
 				coins += enemy_data.coins;
 			}
 		}
-		map_active_value_result_cells[map.name].coins.innerText = String((coins / map.patterns.length).toFixed(2));
-		map_active_value_result_cells[map.name].souls.innerText = String((souls / map.patterns.length).toFixed(2));
+		const average_pattern_coins = coins / map.patterns.length;
+		const average_pattern_souls = souls / map.patterns.length;
+		const pattern_coins_per_second = patterns_per_second * average_pattern_coins;
+		const pattern_souls_per_second = patterns_per_second * average_pattern_souls;
+		//Add in the giants' average cps/sps to what we calculated
+		const { giant_coins_per_second, giant_souls_per_second } = giants
+			.filter((g) => g.maps.includes(map.name) && giant_bought[g.name])
+			.map((g) => ({ giant_coins_per_second: giants_per_second * g.coins, giant_souls_per_second: giants_per_second * g.souls }))
+			.reduce(
+				(acc, curr) => {
+					acc.giant_coins_per_second += curr.giant_coins_per_second;
+					acc.giant_souls_per_second += curr.giant_souls_per_second;
+					return acc;
+				},
+				{ giant_coins_per_second: 0, giant_souls_per_second: 0 },
+			);
+		map_active_value_result_cells[map.name].coins.innerText = String((pattern_coins_per_second + giant_coins_per_second).toFixed(2));
+		map_active_value_result_cells[map.name].souls.innerText = String((pattern_souls_per_second + giant_souls_per_second).toFixed(2));
 	}
+
 	const table = document.querySelector("#mapValuesResultsTableActive")?.closest("table");
 	if (table !== null && table !== undefined) {
 		update_table_sort(table);
@@ -224,12 +292,12 @@ const calculate_map_values_idle = () => {
 	}
 };
 
-const create_evolution_checkbox = (name: string) => {
+const create_evolution_checkbox = (name: string, changeCallback: (event: Event) => void) => {
 	const checkbox = document.createElement("input");
 	checkbox.type = "checkbox";
 	checkbox.name = name.replace(/ /g, "_");
 	checkbox.classList.add("bonus_checkbox");
-	checkbox.addEventListener("change", on_evolution_toggle);
+	checkbox.addEventListener("change", changeCallback);
 	const label = document.createElement("label");
 	label.textContent = name;
 	label.htmlFor = name;
@@ -252,6 +320,12 @@ const find_evolution_base = (enemy_name: string): Enemy => {
 		throw new Error(`No enemy evolves into ${enemy_name}!`);
 	}
 	return find_evolution_base(previous_enemy[0]);
+};
+
+const on_giant_toggle = (event: Event) => {
+	const giant_name = (event.currentTarget as HTMLInputElement).name.replace(/_/g, " ");
+	giant_bought[giant_name] = !giant_bought[giant_name];
+	calculate_map_values();
 };
 
 const on_evolution_toggle = (event: Event) => {
